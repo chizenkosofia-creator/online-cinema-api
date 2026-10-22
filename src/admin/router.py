@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.accounts import User, UserGroup, UserGroupEnum
-from app.schemas.accounts import UserResponseSchema
-from app.database import get_current_admin_user, get_db
+from src.accounts.models import User, UserGroup, UserGroupEnum
+from src.accounts.schemas import UserResponseSchema
+from src.database import get_db
+from src.dependencies import get_current_admin_user
 
 admin_router = APIRouter(prefix="/admin/users", tags=["Admin User Management"])
 
