@@ -56,11 +56,11 @@ services:
   api:
     build: .
     container_name: backend_cinema
-    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    command: sh -c "alembic upgrade head && uvicorn src.main:src --host 0.0.0.0 --port 8000 --reload"
     env_file:
       - .env
     environment:
-      - PYTHONPATH=/app
+      - PYTHONPATH=/src
     ports:
       - "8000:8000"
     depends_on:
@@ -69,43 +69,43 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./:/app
+      - ./:/src
     networks:
       - theater_network
 
   celery_worker:
     build: .
     container_name: celery_worker_cinema
-    command: celery -A app.tasks.celery_app worker -l info
+    command: celery -A src.tasks.celery_app worker -l info
     env_file:
       - .env
     environment:
-      - PYTHONPATH=/app
+      - PYTHONPATH=/src
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
-      - ./:/app
+      - ./:/src
     networks:
       - theater_network
 
   celery_beat:
     build: .
     container_name: celery_beat_cinema
-    command: celery -A app.tasks.celery_app beat -l info
+    command: celery -A src.tasks.celery_app beat -l info
     env_file:
       - .env
     environment:
-      - PYTHONPATH=/app
+      - PYTHONPATH=/src
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
-      - ./:/app
+      - ./:/src
     networks:
       - theater_network
 
