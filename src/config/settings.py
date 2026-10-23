@@ -21,7 +21,7 @@ class Settings(BaseSettings):
 
     SMTP_HOST: str = "mailhog"
     SMTP_PORT: int = 1025
-    EMAIL_FROM: EmailStr = "no-reply@cinema.local"
+    EMAIL_FROM: EmailStr = "no-reply@cinema.com"
     FRONTEND_URL: str = "http://localhost:3000"
 
     DOCS_USERNAME: str
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        extra="ignore"
+        extra="ignore",
     )
 
 
