@@ -11,6 +11,8 @@ from src.database import get_db
 from src.accounts.models import User, ActivationToken
 from src.accounts.schemas import ResetPasswordRequestSchema
 
+router = APIRouter(prefix="/accounts")
+
 @router.post("/resend-activation", status_code=status.HTTP_200_OK)
 async def resend_activation_token(
     payload: ResetPasswordRequestSchema,
