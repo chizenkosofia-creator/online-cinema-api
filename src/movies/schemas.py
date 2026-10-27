@@ -80,8 +80,10 @@ class MovieUpdate(BaseModel):
 class GenreCreate(BaseModel):
     name: str = Field(..., max_length=255)
 
+
 class PersonCreate(BaseModel):
     name: str = Field(..., max_length=255)
+
 
 class GenreWithCountResponse(BaseModel):
     id: int
@@ -89,3 +91,50 @@ class GenreWithCountResponse(BaseModel):
     movies_count: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MovieReactionCreate(BaseModel):
+    is_like: bool = Field(..., description="True for like, False for dislike")
+
+
+class MovieRatingCreate(BaseModel):
+    score: int = Field(..., ge=1, le=10, description="Rating score from 1 to 10")
+
+
+class MovieInteractionResponse(BaseModel):
+    detail: str
+    average_rating: Optional[float] = None
+    ratings_count: Optional[int] = None
+    likes_count: Optional[int] = None
+    dislikes_count: Optional[int] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+from datetime import datetime
+from typing import List, Optional
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class CommentCreate(BaseModel):
+    content: str = Field(..., min_length=1, max_length=2000, description="Comment text content")
+    parent_id: Optional[int] = Field(None, description="Parent comment ID if this is a threaded reply")
+
+
+class CommentUpdate(BaseModel):
+    content: str = Field(..., min_length=1, max_length=2000, description="Updated comment text")
+
+
+class CommentResponse(BaseModel):
+    id: int
+    user_id: int
+    movie_id: int
+    parent_id: Optional[int]
+    content: str
+    created_at: datetime
+    updated_at: datetime
+    replies: List["CommentResponse"] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+CommentResponse.model_rebuild()

@@ -1,7 +1,9 @@
+from datetime import datetime
 import uuid
 from decimal import Decimal
 from typing import List, Optional
 from sqlalchemy import (
+    Boolean,
     String,
     Float,
     Text,
@@ -11,6 +13,8 @@ from sqlalchemy import (
     ForeignKey,
     Table,
     Column,
+    DateTime,
+    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -36,6 +40,15 @@ movie_stars = Table(
     Base.metadata,
     Column("movie_id", ForeignKey("movies.id", ondelete="CASCADE"), primary_key=True),
     Column("star_id", ForeignKey("stars.id", ondelete="CASCADE"), primary_key=True),
+)
+
+
+user_favorite_movies = Table(
+    "user_favorite_movies",
+    Base.metadata,
+    Column("user_id", ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("movie_id", ForeignKey("movies.id", ondelete="CASCADE"), primary_key=True),
+    Column("created_at", DateTime(timezone=True), server_default=func.now()),
 )
 
 
@@ -126,6 +139,8 @@ class MovieModel(Base):
     stars: Mapped[List["StarModel"]] = relationship(
         "StarModel", secondary=movie_stars, back_populates="movies"
     )
+    average_rating: Mapped[float] = mapped_column(Float, default=0.0)
+    ratings_count: Mapped[int] = mapped_column(Integer, default=0)
 
     __table_args__ = (
         UniqueConstraint("name", "year", "time", name="unique_movie_constraint"),
@@ -133,3 +148,57 @@ class MovieModel(Base):
 
     def __repr__(self):
         return f"<Movie(name='{self.name}', year={self.year}, imdb={self.imdb})>"
+
+
+class MovieReactionModel(Base):
+    __tablename__ = "movie_reactions"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    movie_id: Mapped[int] = mapped_column(ForeignKey("movies.id", ondelete="CASCADE"))
+    is_like: Mapped[bool] = mapped_column(Boolean)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "movie_id", name="uq_user_movie_reaction"),
+    )
+
+
+class MovieRatingModel(Base):
+    __tablename__ = "movie_ratings"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    movie_id: Mapped[int] = mapped_column(ForeignKey("movies.id", ondelete="CASCADE"))
+    score: Mapped[int] = mapped_column(Integer)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "movie_id", name="uq_user_movie_rating"),
+    )
+
+
+class MovieCommentModel(Base):
+    __tablename__ = "movie_comments"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    movie_id: Mapped[int] = mapped_column(ForeignKey("movies.id", ondelete="CASCADE"), nullable=False)
+    parent_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("movie_comments.id", ondelete="CASCADE"), nullable=True
+    )
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    # Зв'язки для вкладених відповідей та доступу до автора/фільму
+    parent: Mapped[Optional["MovieCommentModel"]] = relationship(
+        "MovieCommentModel", remote_side=[id], back_populates="replies", cascade="all, delete"
+    )
+    replies: Mapped[List["MovieCommentModel"]] = relationship(
+        "MovieCommentModel", back_populates="parent", cascade="all, delete"
+    )
+    movie: Mapped["MovieModel"] = relationship("MovieModel", backref="comments")
+
+    def __repr__(self):
+        return f"<Comment(id={self.id}, user_id={self.user_id}, movie_id={self.movie_id})>"
