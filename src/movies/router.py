@@ -17,6 +17,7 @@ from src.movies.schemas import (
     MoviePaginatedResponse,
     MovieUpdate,
 )
+from src.orders.models import OrderItemModel
 
 router = APIRouter(prefix="/movies", tags=["Movies"])
 
@@ -76,16 +77,16 @@ async def create_movie(
 
 @router.get("/", response_model=MoviePaginatedResponse)
 async def list_movies(
-        page: int = Query(1, ge=1, description="Номер сторінки"),
-        size: int = Query(10, ge=1, le=100, description="Кількість елементів на сторінці"),
-        genre_id: Optional[int] = Query(None, description="Фільтрація за ID жанру"),
-        year: Optional[int] = Query(None, description="Фільтрація за роком випуску"),
-        search: Optional[str] = Query(None, description="Пошук за назвою або описом"),
+        page: int = Query(1, ge=1, description="Page number"),
+        size: int = Query(10, ge=1, le=100, description="Number of items per page"),
+        genre_id: Optional[int] = Query(None, description="Filter by genre ID"),
+        year: Optional[int] = Query(None, description="Filter by release year"),
+        search: Optional[str] = Query(None, description="Search by movie name or description"),
         sort_by: Optional[str] = Query(
             "year",
-            description="Сортування за полем: year, imdb, price, name",
+            description="Sort by field: year, imdb, price, name",
         ),
-        sort_order: Optional[str] = Query("desc", description="Порядок: asc або desc"),
+        sort_order: Optional[str] = Query("desc", description="Sort order: asc or desc"),
         db: AsyncSession = Depends(get_db),
 ):
     query = select(MovieModel).options(
@@ -211,11 +212,21 @@ async def delete_movie(
         movie_id: int,
         db: AsyncSession = Depends(get_db),
 ):
-    """Delete a movie if it has not been purchased by any user (Moderator action)."""
     query = select(MovieModel).where(MovieModel.id == movie_id)
     movie = (await db.execute(query)).scalar_one_or_none()
     if not movie:
         raise HTTPException(status_code=404, detail="Movie not found")
+
+    purchase_check = await db.execute(
+        select(func.count()).select_from(OrderItemModel).where(OrderItemModel.movie_id == movie_id)
+    )
+    purchased_count = purchase_check.scalar_one()
+
+    if purchased_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete a movie that has been purchased by users."
+        )
 
     await db.delete(movie)
     await db.commit()
