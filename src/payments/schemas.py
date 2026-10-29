@@ -1,8 +1,20 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 from src.payments.models import PaymentStatus
+
+
+class CheckoutSessionCreate(BaseModel):
+    order_id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CheckoutSessionResponse(BaseModel):
+    checkout_url: str
+    session_id: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaymentItemResponse(BaseModel):
@@ -17,19 +29,10 @@ class PaymentResponse(BaseModel):
     id: int
     user_id: int
     order_id: int
-    amount: Decimal
-    status: PaymentStatus
-    external_payment_id: Optional[str] = None
     created_at: datetime
-    items: List[PaymentItemResponse] = []
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class PaymentPaginatedResponse(BaseModel):
-    total: int
-    page: int
-    size: int
-    items: List[PaymentResponse]
+    status: PaymentStatus
+    amount: Decimal
+    external_payment_id: str | None
+    items: list[PaymentItemResponse] = []
 
     model_config = ConfigDict(from_attributes=True)

@@ -7,14 +7,14 @@ from dependencies import get_current_user
 from src.database import get_db
 from src.movies.models import MovieModel, user_favorite_movies
 from src.movies.schemas import MoviePaginatedResponse
-from src.accounts.models import User
+from src.accounts.models import UserModel
 router = APIRouter(prefix="/movies/favorites", tags=["Movie Favorites"])
 
 
 @router.post("/{movie_id}", status_code=status.HTTP_201_CREATED)
 async def add_movie_to_favorites(
     movie_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Add a movie to the current user's favorites list."""
@@ -45,7 +45,7 @@ async def add_movie_to_favorites(
 @router.delete("/{movie_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_movie_from_favorites(
     movie_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Remove a movie from the current user's favorites list."""
@@ -68,7 +68,7 @@ async def remove_movie_from_favorites(
 async def list_user_favorites(
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(10, ge=1, le=100, description="Number of items per page"),
-    current_user: User = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Retrieve the current user's favorite movies with pagination."""

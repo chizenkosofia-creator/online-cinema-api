@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database import get_db
 from src.movies.models import MovieModel, MovieReactionModel, MovieRatingModel
 from src.movies.schemas import MovieReactionCreate, MovieRatingCreate, MovieInteractionResponse
-from src.accounts.models import User
+from src.accounts.models import UserModel
 from src.dependencies import get_current_user
 
 router = APIRouter(prefix="/movies", tags=["Movie Interactions"])
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/movies", tags=["Movie Interactions"])
 async def react_to_movie(
     movie_id: int,
     payload: MovieReactionCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     movie = (await db.execute(select(MovieModel).where(MovieModel.id == movie_id))).scalar_one_or_none()
@@ -51,7 +51,7 @@ async def react_to_movie(
 async def rate_movie(
     movie_id: int,
     payload: MovieRatingCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     movie = (await db.execute(select(MovieModel).where(MovieModel.id == movie_id))).scalar_one_or_none()

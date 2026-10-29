@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import settings
 from src.database import get_db
-from src.accounts.models import User, ActivationToken
+from src.accounts.models import UserModel, ActivationToken
 from src.accounts.schemas import EmailRequestSchema
 
 router = APIRouter(prefix="/accounts", tags=["Accounts"])
@@ -17,7 +17,7 @@ async def resend_activation_token(
     payload: EmailRequestSchema,
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(User).where(User.email == payload.email))
+    result = await db.execute(select(UserModel).where(UserModel.email == payload.email))
     user = result.scalar_one_or_none()
 
     if not user:

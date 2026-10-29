@@ -1,120 +1,79 @@
 services:
   db:
-    image: postgres:16
-    container_name: postgres_cinema
-    env_file:
-      - .env
+    image: postgres:15-alpine
+    container_name: cinema_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: online_cinema
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data/
-    networks:
-      - theater_network
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cinema -d cinema -h 127.0.0.1 || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d online_cinema"]
       interval: 5s
       timeout: 5s
-      retries: 10
-      start_period: 10s
-
-  redis:
-    image: redis:7
-    container_name: redis_cinema
-    ports:
-      - "6379:6379"
-    networks:
-      - theater_network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: cinema_redis
+    ports:
+      - "6379:6379"
+
   minio:
-    image: minio/minio
-    container_name: minio_cinema
-    command: server /data --console-address ":9001"
-    env_file:
-      - .env
+    image: quay.io/minio/minio:latest
+    container_name: cinema_minio
     ports:
       - "9000:9000"
       - "9001:9001"
-    volumes:
-      - miniodata:/data
-    networks:
-      - theater_network
-
-  mailhog:
-    image: mailhog/mailhog
-    container_name: mailhog_cinema
-    ports:
-      - "1025:1025"
-      - "8025:8025"
-    networks:
-      - theater_network
-
-  api:
-    build: .
-    container_name: backend_cinema
-    command: sh -c "alembic upgrade head && uvicorn src.main:src --host 0.0.0.0 --port 8000 --reload"
-    env_file:
-      - .env
     environment:
-      - PYTHONPATH=/src
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
+  web:
+    build: .
+    container_name: cinema_web
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
     ports:
       - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    volumes:
-      - ./:/src
-    networks:
-      - theater_network
-
-  celery_worker:
-    build: .
-    container_name: celery_worker_cinema
-    command: celery -A src.tasks.celery_app worker -l info
-    env_file:
-      - .env
     environment:
-      - PYTHONPATH=/src
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/online_cinema
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       db:
         condition: service_healthy
       redis:
-        condition: service_healthy
-    volumes:
-      - ./:/src
-    networks:
-      - theater_network
+        condition: service_started
 
-  celery_beat:
+  celery:
     build: .
-    container_name: celery_beat_cinema
-    command: celery -A src.tasks.celery_app beat -l info
-    env_file:
-      - .env
-    environment:
-      - PYTHONPATH=/src
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    container_name: cinema_celery
+    command: celery -A src.celery_app worker --loglevel=info
     volumes:
-      - ./:/src
-    networks:
-      - theater_network
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/online_cinema
+      - REDIS_URL=redis://redis:6379/0
+      - redis_url=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SECRET_KEY=your_secret_key_here
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=online_cinema
+      - DOCS_USERNAME=admin
+      - DOCS_PASSWORD=admin
+    depends_on:
+      - db
+      - redis
 
 volumes:
-  pgdata:
-    driver: local
-  miniodata:
-    driver: local
-
-networks:
-  theater_network:
-    driver: bridge
+  postgres_data:
+  minio_data:

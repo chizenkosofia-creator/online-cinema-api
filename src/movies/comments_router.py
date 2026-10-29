@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 from src.database import get_db
 from src.movies.models import MovieModel, MovieCommentModel
 from src.movies.schemas import CommentCreate, CommentUpdate, CommentResponse
-from src.accounts.models import User
+from src.accounts.models import UserModel
 from src.dependencies import get_current_user
 
 router = APIRouter(prefix="/movies", tags=["Movie Comments"])
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/movies", tags=["Movie Comments"])
 async def create_comment(
     movie_id: int,
     payload: CommentCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     movie = (await db.execute(select(MovieModel).where(MovieModel.id == movie_id))).scalar_one_or_none()
@@ -71,7 +71,7 @@ async def get_movie_comments(
 async def update_comment(
     comment_id: int,
     payload: CommentUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     comment = (
@@ -93,7 +93,7 @@ async def update_comment(
 @router.delete("/comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_comment(
     comment_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     comment = (

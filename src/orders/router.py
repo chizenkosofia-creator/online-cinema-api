@@ -16,7 +16,7 @@ from src.orders.schemas import (
     OrderStatusUpdate,
 )
 from src.movies.models import MovieModel
-from src.accounts.models import User
+from src.accounts.models import UserModel
 from src.dependencies import get_current_user, get_current_admin_user
 from src.orders.services import send_order_confirmation_email
 
@@ -26,7 +26,7 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
 @router.post("/", response_model=OrderCreateResponse, status_code=status.HTTP_201_CREATED)
 async def create_order(
     payload: OrderCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Place a new order, automatically excluding unavailable, already purchased, or pending movies."""
@@ -125,7 +125,7 @@ async def create_order(
 
 @router.get("/my", response_model=List[OrderResponse])
 async def list_user_orders(
-    current_user: User = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Retrieve all orders placed by the current user."""
@@ -142,7 +142,7 @@ async def list_user_orders(
 @router.post("/{order_id}/cancel", response_model=OrderResponse)
 async def cancel_order(
     order_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Cancel a pending order before payment."""
@@ -172,7 +172,7 @@ async def cancel_order(
 @router.post("/{order_id}/pay", response_model=OrderResponse)
 async def pay_order(
     order_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Finalize payment for a pending order, revalidate prices, and send email confirmation."""
@@ -218,7 +218,7 @@ async def pay_order(
 @router.post("/{order_id}/refund-request", response_model=OrderResponse)
 async def request_refund(
     order_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: UserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Request a refund for a successfully paid order."""
@@ -253,7 +253,7 @@ async def admin_list_orders(
     order_status: Optional[OrderStatus] = Query(None, description="Filter by status"),
     date_from: Optional[datetime] = Query(None, description="Filter from creation date"),
     date_to: Optional[datetime] = Query(None, description="Filter up to creation date"),
-    current_admin: User = Depends(get_current_admin_user),
+    current_admin: UserModel = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Admin endpoint to view and filter all user orders."""
@@ -288,7 +288,7 @@ async def admin_list_orders(
 async def admin_update_order_status(
     order_id: int,
     payload: OrderStatusUpdate,
-    current_admin: User = Depends(get_current_admin_user),
+    current_admin: UserModel = Depends(get_current_admin_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Admin endpoint to manually update an order status (e.g., process a refund)."""
