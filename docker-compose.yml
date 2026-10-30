@@ -37,6 +37,8 @@ services:
 
   web:
     build: .
+    env_file:
+      - .env
     container_name: cinema_web
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:

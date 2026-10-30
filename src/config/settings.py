@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     ACTIVATION_TOKEN_HOURS: int = 24
     PASSWORD_RESET_TOKEN_HOURS: int = 1
 
+    STRIPE_WEBHOOK_SECRET: str
+    STRIPE_SECRET_KEY: str
+
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_SERVER: str = "db"
@@ -38,7 +41,7 @@ class Settings(BaseSettings):
     DOCS_USERNAME: str
     DOCS_PASSWORD: str
 
-    # Mail settings for fastapi-mail (optional for Mailhog)
+
     MAIL_USERNAME: str | None = None
     MAIL_PASSWORD: str | None = None
     MAIL_FROM: str = "no-reply@cinema.com"

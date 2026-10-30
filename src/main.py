@@ -4,6 +4,11 @@ from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from src.config.settings import settings
 
+from src.accounts.router import router as auth_router
+from src.payments.router import router as payments_router
+from src.movies.router import router as movies_router
+from src.orders.router import router as orders_router
+
 app = FastAPI(
     title="Online Cinema API",
     version="0.1.0",
@@ -36,3 +41,9 @@ async def custom_swagger_ui(username: str = Depends(verify_docs_credentials)):
 @app.get("/redoc", include_in_schema=False)
 async def custom_redoc(username: str = Depends(verify_docs_credentials)):
     return get_redoc_html(openapi_url=app.openapi_url, title="Online Cinema API - ReDoc")
+
+
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(payments_router, prefix="/api/v1")
+app.include_router(movies_router, prefix="/api/v1")
+app.include_router(orders_router, prefix="/api/v1")
