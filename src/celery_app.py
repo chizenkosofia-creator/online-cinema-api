@@ -1,6 +1,6 @@
 from celery import Celery
 from celery.schedules import crontab
-from src.config import settings
+from src.config.settings import settings
 
 celery_app = Celery(
     "cinema_tasks",

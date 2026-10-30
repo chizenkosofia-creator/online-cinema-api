@@ -48,7 +48,7 @@ class UserGroup(Base):
         return f"<UserGroup(id={self.id}, name={self.name})>"
 
 
-class User(Base):
+class UserModel(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)

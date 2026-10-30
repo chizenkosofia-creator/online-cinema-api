@@ -66,3 +66,7 @@ class UserResponseSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class EmailRequestSchema(BaseModel):
+    email: EmailStr

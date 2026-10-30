@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.accounts.models import User, UserGroup, UserGroupEnum
+from src.accounts.models import UserModel, UserGroup, UserGroupEnum
 from src.accounts.schemas import UserResponseSchema
 from src.database import get_db
 from src.dependencies import get_current_admin_user
@@ -14,10 +14,10 @@ admin_router = APIRouter(prefix="/admin/users", tags=["Admin User Management"])
 async def manually_activate_user(
     user_id: int,
     db: AsyncSession = Depends(get_db),
-    admin: User = Depends(get_current_admin_user),
+    admin: UserModel = Depends(get_current_admin_user),
 ):
     """Manually activate a user account (Admin only)."""
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(select(UserModel).where(UserModel.id == user_id))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -37,10 +37,10 @@ async def change_user_group(
     user_id: int,
     new_group: UserGroupEnum,
     db: AsyncSession = Depends(get_db),
-    admin: User = Depends(get_current_admin_user),
+    admin: UserModel = Depends(get_current_admin_user),
 ):
     """Change user group / role (Admin only)."""
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(select(UserModel).where(UserModel.id == user_id))
     user = result.scalar_one_or_none()
 
     if not user:

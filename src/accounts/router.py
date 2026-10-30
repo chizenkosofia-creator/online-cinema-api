@@ -1,22 +1,23 @@
 from datetime import datetime, timedelta, timezone
 import secrets
 
-from django.db import router
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config import settings
+from src.config.settings import settings
 from src.database import get_db
-from src.accounts.models import User, ActivationToken
-from src.accounts.schemas import ResetPasswordRequestSchema
+from src.accounts.models import UserModel, ActivationToken
+from src.accounts.schemas import EmailRequestSchema
+
+router = APIRouter(prefix="/accounts", tags=["Accounts"])
 
 @router.post("/resend-activation", status_code=status.HTTP_200_OK)
 async def resend_activation_token(
-    payload: ResetPasswordRequestSchema,
+    payload: EmailRequestSchema,
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(User).where(User.email == payload.email))
+    result = await db.execute(select(UserModel).where(UserModel.email == payload.email))
     user = result.scalar_one_or_none()
 
     if not user:
