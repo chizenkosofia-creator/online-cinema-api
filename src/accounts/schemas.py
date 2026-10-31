@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator, EmailStr
+from pydantic import ConfigDict, BaseModel, field_validator, EmailStr
 from enum import Enum
 from src.validators.accounts import validate_email
 from datetime import datetime
@@ -22,7 +22,8 @@ class UserRegisterSchema(BaseModel):
 
 
 class UserLoginSchema(BaseModel):
-    email: EmailStr
+    email: Optional[str] = None
+    username: Optional[str] = None
     password: str
 
 
@@ -46,13 +47,11 @@ class ResetPasswordRequestSchema(BaseModel):
 class ResetPasswordConfirmSchema(BaseModel):
     token: str
     new_password: str
-
 class UserGroupResponseSchema(BaseModel):
     id: int
     name: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserResponseSchema(BaseModel):
@@ -61,11 +60,10 @@ class UserResponseSchema(BaseModel):
     is_active: bool
     group_id: int
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
     group: Optional[UserGroupResponseSchema] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True, extra="ignore")
 
 
 class EmailRequestSchema(BaseModel):

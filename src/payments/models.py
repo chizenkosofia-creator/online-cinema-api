@@ -23,8 +23,8 @@ class Payment(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     external_payment_id: Mapped[str | None] = mapped_column(String, nullable=True)
 
-    user = relationship("User", back_populates="payments")
-    order = relationship("Order", back_populates="payments")
+    user = relationship("UserModel", back_populates="payments")
+    order = relationship("OrderModel", back_populates="payments")
     items = relationship("PaymentItem", back_populates="payment", cascade="all, delete-orphan")
 
 
@@ -37,4 +37,4 @@ class PaymentItem(Base):
     price_at_payment: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
     payment = relationship("Payment", back_populates="items")
-    order_item = relationship("OrderItem")
+    order_item = relationship("OrderItemModel")

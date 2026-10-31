@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     MAIL_USERNAME: str | None = None
     MAIL_PASSWORD: str | None = None
     MAIL_FROM: str = "no-reply@cinema.com"
+    MAIL_PORT: int = 587
+    MAIL_SERVER: str = "smtp.example.com"
     MAIL_FROM_NAME: str = "Online Cinema"
     EMAIL_FROM: EmailStr = "no-reply@cinema.com"
 

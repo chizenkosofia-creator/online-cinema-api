@@ -11,9 +11,13 @@ from src.orders.router import router as orders_router
 
 app = FastAPI(
     title="Online Cinema API",
+    description="""
+    REST API for the Online Cinema platform. 
+    Allows managing users, authentication, movie catalog, orders, and payments.
+    """,
     version="0.1.0",
-    docs_url=None,
-    redoc_url=None,
+    docs_url="/docs",
+    redoc_url="/redoc",
     openapi_url="/api/v1/openapi.json"
 )
 

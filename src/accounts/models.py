@@ -14,7 +14,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.orm import DeclarativeBase, Relationship, validates
+from sqlalchemy.orm import Relationship, validates
 
 from src.security.password import get_password_hash, verify_password
 from src.security.token import create_refresh_token
@@ -51,6 +51,7 @@ class UserModel(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), unique=True, index=True, nullable=False)
     _hashed_password = Column("hashed_password", String(255), nullable=False)
+    payments = Relationship("Payment", back_populates="user")
     is_active = Column(Boolean, default=False, nullable=False)
     created_at = Column(
         DateTime(timezone=True),
@@ -90,15 +91,9 @@ class UserModel(Base):
         cascade="all, delete-orphan",
     )
     orders = Relationship(
-        "Order",
+        "OrderModel",
         back_populates="user",
         cascade="all, delete-orphan",
-    )
-    cart = Relationship(
-        "Cart",
-        back_populates="user",
-        cascade="all, delete-orphan",
-        uselist=False,
     )
 
     def __repr__(self):

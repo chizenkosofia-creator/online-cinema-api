@@ -6,6 +6,8 @@ from typing import List
 from sqlalchemy import String, DECIMAL, ForeignKey, DateTime, func, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.movies.models import MovieModel
+from src.accounts.models import UserModel
+from src.payments.models import Payment
 
 from src.database import Base
 
@@ -25,6 +27,7 @@ class OrderModel(Base):
     uuid: Mapped[str] = mapped_column(
         String(36), unique=True, nullable=False, default=lambda: str(uuid.uuid4())
     )
+    user: Mapped["UserModel"] = relationship("UserModel", back_populates="orders")
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     total_amount: Mapped[Decimal] = mapped_column(DECIMAL(10, 2), nullable=False, default=Decimal("0.00"))
     status: Mapped[OrderStatus] = mapped_column(
@@ -33,7 +36,9 @@ class OrderModel(Base):
         default=OrderStatus.PENDING,
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-
+    payments: Mapped[List["Payment"]] = relationship(
+        "Payment", back_populates="order", cascade="all, delete-orphan"
+    )
     items: Mapped[List["OrderItemModel"]] = relationship(
         "OrderItemModel", back_populates="order", cascade="all, delete-orphan"
     )
