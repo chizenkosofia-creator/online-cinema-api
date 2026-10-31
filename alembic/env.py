@@ -14,9 +14,15 @@ from src.config.settings import settings
 from src.database import Base
 
 import src.accounts.models  # noqa: F401
+import src.movies.models    # noqa: F401
+import src.orders.models    # noqa: F401
+import src.payments.models  # noqa: F401
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+config.set_main_option(
+    "sqlalchemy.url",
+    "postgresql+asyncpg://postgres:postgres@db:5432/online_cinema"
+)
 if config.config_file_name is not None:
     try:
         fileConfig(config.config_file_name)

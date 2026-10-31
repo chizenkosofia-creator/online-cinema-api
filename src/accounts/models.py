@@ -19,10 +19,7 @@ from sqlalchemy.orm import DeclarativeBase, Relationship, validates
 from src.security.password import get_password_hash, verify_password
 from src.security.token import create_refresh_token
 from src.validators.accounts import validate_email
-
-
-class Base(DeclarativeBase):
-    pass
+from src.database import Base
 
 
 class UserGroupEnum(StrEnum):
@@ -42,7 +39,7 @@ class UserGroup(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(Enum(UserGroupEnum), unique=True, nullable=False)
 
-    users = Relationship("User", back_populates="group")
+    users = Relationship("UserModel", back_populates="group")
 
     def __repr__(self):
         return f"<UserGroup(id={self.id}, name={self.name})>"
@@ -105,7 +102,7 @@ class UserModel(Base):
     )
 
     def __repr__(self):
-        return f"<User(id={self.id}, email={self.email}, is_active={self.is_active})>"
+        return f"<UserModel(id={self.id}, email={self.email}, is_active={self.is_active})>"
 
     @property
     def password(self) -> None:
@@ -113,14 +110,13 @@ class UserModel(Base):
 
     @password.setter
     def password(self, raw_password: str) -> None:
-        verify_password(raw_password)
         self._hashed_password = get_password_hash(raw_password)
 
     def verify_password(self, raw_password: str) -> bool:
         return verify_password(raw_password, self._hashed_password)
 
     @validates("email")
-    def validate_email_field(self, value):
+    def validate_email_field(self, key, value):
         return validate_email(value)
 
 
@@ -136,7 +132,7 @@ class UserProfile(Base):
     date_of_birth = Column(Date, nullable=True)
     info = Column(Text, nullable=True)
 
-    user = Relationship("User", back_populates="profile")
+    user = Relationship("UserModel", back_populates="profile")
 
     def __repr__(self):
         return (
@@ -167,7 +163,7 @@ class Token(Base):
 class ActivationToken(Token):
     __tablename__ = "activation_tokens"
 
-    user = Relationship("User", back_populates="activation_token")
+    user = Relationship("UserModel", back_populates="activation_token")
     __table_args__ = (UniqueConstraint("user_id"),)
 
     def __repr__(self):
@@ -177,7 +173,7 @@ class ActivationToken(Token):
 class PasswordResetToken(Token):
     __tablename__ = "password_reset_tokens"
 
-    user = Relationship("User", back_populates="password_reset_token")
+    user = Relationship("UserModel", back_populates="password_reset_token")
     __table_args__ = (UniqueConstraint("user_id"),)
 
     def __repr__(self):
@@ -187,7 +183,7 @@ class PasswordResetToken(Token):
 class RefreshToken(Token):
     __tablename__ = "refresh_tokens"
 
-    user = Relationship("User", back_populates="refresh_tokens")
+    user = Relationship("UserModel", back_populates="refresh_tokens")
 
     def __repr__(self):
         return f"<RefreshToken(id={self.id}, token={self.token}, expires_at={self.expires_at})>"

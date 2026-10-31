@@ -17,7 +17,7 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from src.accounts.models import UserModel
 from src.database import Base
 
 
@@ -190,8 +190,8 @@ class MovieCommentModel(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+    user: Mapped["UserModel"] = relationship("UserModel", backref="comments")
 
-    # Зв'язки для вкладених відповідей та доступу до автора/фільму
     parent: Mapped[Optional["MovieCommentModel"]] = relationship(
         "MovieCommentModel", remote_side=[id], back_populates="replies", cascade="all, delete"
     )
