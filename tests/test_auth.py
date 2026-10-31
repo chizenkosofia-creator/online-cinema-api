@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.asyncio
 async def test_user_registration(async_client):
     response = await async_client.post(
@@ -13,6 +14,7 @@ async def test_user_registration(async_client):
     assert response.status_code in [200, 201]
     data = response.json()
     assert "email" in data or "id" in data
+
 
 @pytest.mark.asyncio
 async def test_user_login(async_client):

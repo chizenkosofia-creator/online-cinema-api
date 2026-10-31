@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.asyncio
 async def test_read_root(async_client):
     response = await async_client.get("/")
