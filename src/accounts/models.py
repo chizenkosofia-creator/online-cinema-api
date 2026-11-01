@@ -182,3 +182,12 @@ class RefreshToken(Token):
 
     def __repr__(self):
         return f"<RefreshToken(id={self.id}, token={self.token}, expires_at={self.expires_at})>"
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    token = Column(String, unique=True, index=True, nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+import secrets
 import jwt
 
 from src.config.settings import settings
@@ -20,3 +21,7 @@ def create_refresh_token(data: dict | None = None) -> str:
 
 def decode_token(token: str) -> dict:
     return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+
+
+def generate_random_token() -> str:
+    return secrets.token_urlsafe(32)

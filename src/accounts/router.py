@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import secrets
 from src.security.password import verify_password, get_password_hash
+from src.security.token import generate_random_token
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import selectinload
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -56,7 +57,7 @@ async def register_user(
     db.add(new_user)
     await db.flush()
 
-    new_token_str = secrets.token_urlsafe(32)
+    new_token_str = generate_random_token()
     expires_at = datetime.now(timezone.utc) + timedelta(hours=settings.ACTIVATION_TOKEN_HOURS)
 
     new_activation_token = ActivationToken(
