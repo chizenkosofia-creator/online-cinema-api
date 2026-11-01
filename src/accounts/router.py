@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 import secrets
-from src.security.password import verify_password
+from src.security.password import verify_password, get_password_hash
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import selectinload
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,12 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import settings
 from src.database import get_db
-from src.accounts.models import UserModel, ActivationToken
+from src.accounts.models import UserModel, ActivationToken, UserGroup
 from src.accounts.schemas import (
     EmailRequestSchema,
     UserRegisterSchema,
     UserResponseSchema,
-    UserLoginSchema,
     TokenResponseSchema
 )
 from src.security.token import create_access_token, create_refresh_token
@@ -41,18 +40,36 @@ async def register_user(
             detail="User with this email already exists."
         )
 
+    group_result = await db.execute(select(UserGroup).where(UserGroup.name == "USER"))
+    user_group = group_result.scalar_one_or_none()
+    if not user_group:
+        user_group = UserGroup(name="USER")
+        db.add(user_group)
+        await db.flush()
+
     new_user = UserModel(
         email=payload.email,
-        password=payload.password,
-        group_id=1,
-        is_active=True
+        hashed_password=get_password_hash(payload.password),
+        group_id=user_group.id,
+        is_active=False
     )
     db.add(new_user)
+    await db.flush()
+
+    new_token_str = secrets.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=settings.ACTIVATION_TOKEN_HOURS)
+
+    new_activation_token = ActivationToken(
+        user_id=new_user.id,
+        token=new_token_str,
+        expires_at=expires_at
+    )
+    db.add(new_activation_token)
     await db.commit()
 
     result = await db.execute(
         select(UserModel)
-        .options(selectinload(UserModel.group)) # або інший пов'язаний атрибут, який вимагає схема
+        .options(selectinload(UserModel.group))
         .where(UserModel.id == new_user.id)
     )
     user_with_relations = result.scalar_one()
