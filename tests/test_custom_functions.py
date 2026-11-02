@@ -34,14 +34,14 @@ def test_validate_email_failure(invalid_email):
 def test_password_hashing_and_verification():
     raw_password = "SuperSecretPassword123!"
 
-    hashed_password = get_password_hash(raw_password)
+    _hashed_password = get_password_hash(raw_password)
 
-    assert hashed_password != raw_password
-    assert isinstance(hashed_password, str)
+    assert _hashed_password != raw_password
+    assert isinstance(_hashed_password, str)
 
-    assert verify_password(raw_password, hashed_password) is True
+    assert verify_password(raw_password, _hashed_password) is True
 
-    assert verify_password("WrongPassword999!", hashed_password) is False
+    assert verify_password("WrongPassword999!", _hashed_password) is False
 
 
 def test_create_refresh_token():

@@ -46,6 +46,7 @@ dev = [
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.16"
+amqp = "<5.2.0"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

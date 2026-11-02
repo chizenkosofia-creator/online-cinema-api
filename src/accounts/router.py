@@ -50,7 +50,7 @@ async def register_user(
 
     new_user = UserModel(
         email=payload.email,
-        hashed_password=get_password_hash(payload.password),
+        _hashed_password=get_password_hash(payload.password),
         group_id=user_group.id,
         is_active=False
     )
