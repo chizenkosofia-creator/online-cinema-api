@@ -1,4 +1,4 @@
-
+```markdown
 # Online Cinema
 
 Async REST API for an online cinema: movie catalog, shopping cart, orders and Stripe payments.
@@ -38,35 +38,37 @@ docker compose exec app alembic upgrade head
 
 
 
-* **API docs (Swagger):** http://localhost:8000/docs (Protected via Basic Auth)
+* **API docs (Swagger):** http://localhost:8000/docs
 * **Health check:** http://localhost:8000/health
 * **Mailpit (Local inbox for outgoing emails):** http://localhost:8025
 
 ---
 
-## ️ Services
+##  Services
 
 The project is fully containerized and runs using Docker Compose. It includes the following services:
 
 | Service | Container Name | Purpose |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `db` | `cinema_db` | **PostgreSQL 15** database for storing users, movies, orders, and payments (with healthcheck) |
 | `redis` | `cinema_redis` | **Redis 7** message broker and cache for Celery background tasks |
 | `minio` | `cinema_minio` | **MinIO S3**-compatible storage for uploading media files (such as user avatars) |
 | `web` | `cinema_web` | **FastAPI** web application (available on port `8000`), handling the core API logic |
 | `celery` | `cinema_celery` | **Celery Worker** for executing asynchronous background tasks (sending emails, clearing tokens) |
+
 ### Managing Celery Logs & Restarts
 
 To view worker and beat logs:
+
 ```bash
 docker compose logs -f celery
 
 ```
 
-*Note: Unlike the FastAPI app (`app`), the worker and beat do not auto-reload on code changes. Restart them after modifying tasks or schedules:*
+*Note: Unlike the FastAPI app, the worker and beat do not auto-reload on code changes. Restart them after modifying tasks or schedules:*
 
 ```bash
-docker compose restart celery_worker celery_beat
+docker compose restart celery
 
 ```
 
@@ -122,10 +124,10 @@ In separate terminal windows, start the background workers:
 
 ```bash
 # Terminal 2: Celery worker (--pool=solo required on Windows)
-poetry run celery -A src.core.celery_app worker --loglevel=info --pool=solo
+poetry run celery -A src.config.celery:celery_app worker --loglevel=info --pool=solo
 
 # Terminal 3: Celery beat (for periodic tasks)
-poetry run celery -A src.core.celery_app beat --loglevel=info
+poetry run celery -A src.config.celery:celery_app beat --loglevel=info
 
 ```
 
@@ -139,11 +141,11 @@ poetry run celery -A src.core.celery_app beat --loglevel=info
 
 | Method | Path | Description |
 | --- | --- | --- |
-| `POST` | `/accounts/register` | Register a new inactive user and trigger an activation email (token valid for 24h) |
-| `POST` | `/accounts/activate` | Activate account using email and token |
-| `POST` | `/accounts/resend-activation` | Resend activation email if expired |
+| `POST` | `/api/v1/auth/register` | Register a new inactive user and trigger an activation email (token valid for 24h) |
+| `POST` | `/api/v1/auth/login` | Authenticate user via OAuth2 form and obtain JWT tokens |
+| `POST` | `/api/v1/auth/resend-activation` | Resend activation email if expired |
 
-> *Password requirements:* Must be at least 8 characters long and contain uppercase, lowercase letters, digits, and special characters.
+* **Password requirements:** Must be at least 8 characters long and contain uppercase, lowercase letters, digits, and special characters.
 
 ### Catalog, Orders & Payments
 
@@ -155,13 +157,13 @@ Full request/response schemas, payload specifications, and query parameters are 
 
 ---
 
-## Project Structure
+##  Project Structure
 
 ```text
 src/
   accounts/      # Authentication, registration, tokens, and user management
   admin/         # Admin panel and administrative tools
-  config/        # Application settings and configurations
+  config/        # Application settings and configurations (including celery_app)
   movies/        # Movie catalog, genres, stars, directors, and reviews
   orders/        # Cart, order placement, and order lifecycle management
   payments/      # Stripe integration and payment processing
