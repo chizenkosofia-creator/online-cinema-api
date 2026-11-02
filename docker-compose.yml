@@ -56,6 +56,8 @@ services:
 
   celery:
     build: .
+    env_file:
+      - .env
     container_name: cinema_celery
     command: celery -A src.celery_app worker --loglevel=info
     volumes:

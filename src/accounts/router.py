@@ -88,12 +88,12 @@ async def login_user(
     if not user or not verify_password(form_data.password, user._hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password."
+            detail="Account is not activated."
         )
 
     if not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Account is not activated."
         )
 
@@ -133,7 +133,7 @@ async def resend_activation_token(
     if existing_token:
         await db.delete(existing_token)
 
-    new_token_str = secrets.token_urlsafe(32)
+    new_token_str = generate_random_token()
     expires_at = datetime.now(timezone.utc) + timedelta(hours=settings.ACTIVATION_TOKEN_HOURS)
 
     new_activation_token = ActivationToken(
@@ -145,3 +145,47 @@ async def resend_activation_token(
     await db.commit()
 
     return {"message": "A new activation link has been sent to your email."}
+
+
+@router.post("/activate", status_code=status.HTTP_200_OK)
+async def activate_user_account(
+    token: str,
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(
+        select(ActivationToken)
+        .options(selectinload(ActivationToken.user))
+        .where(ActivationToken.token == token)
+    )
+    activation_token = result.scalar_one_or_none()
+
+    if not activation_token:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Invalid or expired activation token."
+        )
+
+    expires_at = activation_token.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+    if expires_at < datetime.now(timezone.utc):
+        await db.delete(activation_token)
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Activation token has expired."
+        )
+
+    user = activation_token.user
+    if user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Account is already activated."
+        )
+
+    user.is_active = True
+    await db.delete(activation_token)
+    await db.commit()
+
+    return {"message": "Account successfully activated."}

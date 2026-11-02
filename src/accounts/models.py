@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from enum import StrEnum, auto
+from src.config.settings import settings
 
 from sqlalchemy import (
     Boolean,
@@ -17,7 +18,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Relationship, validates
 
 from src.security.password import get_password_hash, verify_password
-from src.security.token import create_refresh_token
+from src.security.token import create_refresh_token, generate_random_token
 from src.validators.accounts import validate_email
 from src.database import Base
 
@@ -146,18 +147,24 @@ class Token(Base):
         unique=True,
         index=True,
         nullable=False,
-        default=create_refresh_token,
     )
     expires_at = Column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc) + timedelta(days=1),
     )
 
 
 class ActivationToken(Token):
     __tablename__ = "activation_tokens"
 
+    token = Column(
+        String(255), unique=True, index=True, nullable=False, default=generate_random_token
+    )
+    expires_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc) + timedelta(hours=24),
+    )
     user = Relationship("UserModel", back_populates="activation_token")
     __table_args__ = (UniqueConstraint("user_id"),)
 
@@ -168,6 +175,15 @@ class ActivationToken(Token):
 class PasswordResetToken(Token):
     __tablename__ = "password_reset_tokens"
 
+    token = Column(
+        String(255), unique=True, index=True, nullable=False, default=generate_random_token
+    )
+    expires_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc) + timedelta(hours=2),
+    )
+
     user = Relationship("UserModel", back_populates="password_reset_token")
     __table_args__ = (UniqueConstraint("user_id"),)
 
@@ -177,6 +193,15 @@ class PasswordResetToken(Token):
 
 class RefreshToken(Token):
     __tablename__ = "refresh_tokens"
+
+    token = Column(
+        String(255), unique=True, index=True, nullable=False, default=create_refresh_token
+    )
+    expires_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_DAYS),
+    )
 
     user = Relationship("UserModel", back_populates="refresh_tokens")
 

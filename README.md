@@ -32,7 +32,7 @@ docker compose up --build -d
 
 4. Run database migrations:
 ```bash
-docker compose exec app alembic upgrade head
+docker compose exec web alembic upgrade head
 
 ```
 
