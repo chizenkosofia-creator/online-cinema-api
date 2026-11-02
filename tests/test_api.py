@@ -10,7 +10,7 @@ from src.accounts.models import UserModel, ActivationToken
 @pytest.mark.asyncio
 async def test_read_root(async_client: AsyncClient):
     response = await async_client.get("/")
-    assert response.status_code in [200, 401, 404]
+    assert response.status_code == 404
 
 
 @pytest.mark.asyncio
@@ -128,3 +128,71 @@ async def test_account_activation_flow(async_client: AsyncClient, db: AsyncSessi
     data = login_response.json()
     assert "access_token" in data
     assert "refresh_token" in data
+
+
+@pytest.mark.asyncio
+async def test_resend_activation_token(async_client: AsyncClient, db: AsyncSession):
+    email = "resend_test@example.com"
+    password = "StrongPassword123!"
+
+    await async_client.post("/api/v1/auth/register", json={
+        "email": email,
+        "password": password
+    })
+
+    response = await async_client.post("/api/v1/auth/resend-activation", json={
+        "email": email
+    })
+
+    assert response.status_code == 200
+    assert "sent" in response.json()["message"].lower()
+
+
+@pytest.mark.asyncio
+async def test_forgot_and_reset_password_flow(async_client: AsyncClient, db: AsyncSession):
+    email = "reset_pass_test@example.com"
+    password = "OriginalPassword123!"
+    new_password = "BrandNewPassword456!"
+
+    await async_client.post("/api/v1/auth/register", json={
+        "email": email,
+        "password": password
+    })
+
+    forgot_response = await async_client.post("/api/v1/auth/forgot-password", json={
+        "email": email
+    })
+    assert forgot_response.status_code == 200
+
+    from src.accounts.models import UserModel, PasswordResetToken
+
+    user_result = await db.execute(select(UserModel).where(UserModel.email == email))
+    user = user_result.scalar_one_or_none()
+
+    token_result = await db.execute(
+        select(PasswordResetToken).where(PasswordResetToken.user_id == user.id)
+    )
+    reset_token = token_result.scalar_one_or_none()
+
+    assert reset_token is not None
+    assert reset_token.token is not None
+
+    reset_response = await async_client.post("/api/v1/auth/reset-password", json={
+        "token": reset_token.token,
+        "new_password": new_password
+    })
+
+    assert reset_response.status_code == 200
+    assert "successfully reset" in reset_response.json()["message"].lower()
+
+    user.is_active = True
+    db.add(user)
+    await db.commit()
+
+    login_response = await async_client.post("/api/v1/auth/login", data={
+        "username": email,
+        "password": new_password
+    })
+
+    assert login_response.status_code == 200
+    assert "access_token" in login_response.json()

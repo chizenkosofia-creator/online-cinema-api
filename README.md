@@ -124,10 +124,10 @@ In separate terminal windows, start the background workers:
 
 ```bash
 # Terminal 2: Celery worker (--pool=solo required on Windows)
-poetry run celery -A src.config.celery:celery_app worker --loglevel=info --pool=solo
+poetry run celery -A src.celery_app:celery_app worker --loglevel=info --pool=solo
 
 # Terminal 3: Celery beat (for periodic tasks)
-poetry run celery -A src.config.celery:celery_app beat --loglevel=info
+poetry run celery -A src.celery_app:celery_app beat --loglevel=info
 
 ```
 

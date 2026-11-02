@@ -68,3 +68,12 @@ class UserResponseSchema(BaseModel):
 
 class EmailRequestSchema(BaseModel):
     email: EmailStr
+
+
+class PasswordResetRequestSchema(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirmSchema(BaseModel):
+    token: str
+    new_password: str

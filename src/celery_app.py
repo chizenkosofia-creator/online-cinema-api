@@ -22,3 +22,5 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(minute=0, hour="*"),
     },
 }
+
+celery_app.autodiscover_tasks(["src.accounts", "src.movies", "src.orders"])

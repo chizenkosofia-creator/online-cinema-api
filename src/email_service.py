@@ -50,3 +50,57 @@ async def send_payment_confirmation_email(
 
     fm = FastMail(conf)
     await fm.send_message(message)
+
+
+async def send_activation_email(email: EmailStr, token: str) -> None:
+    activation_link = f"http://localhost:8000/api/v1/auth/activate?token={token}"
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+        <head><meta charset="UTF-8"><title>Account Activation</title></head>
+        <body style="font-family: Arial, sans-serif; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h2 style="color: #2b6cb0;">Welcome to Online Cinema!</h2>
+                <p>Please activate your account by clicking the link below:</p>
+                <p><a href="{activation_link}" style="background-color: #2b6cb0; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Activate Account</a></p>
+                <p>Or use this token directly: <code>{token}</code></p>
+            </div>
+        </body>
+    </html>
+    """
+    message = MessageSchema(
+        subject="Account Activation - Online Cinema",
+        recipients=[email],
+        body=html_content,
+        subtype=MessageType.html,
+    )
+    fm = FastMail(conf)
+    await fm.send_message(message)
+
+
+async def send_password_reset_email(email: EmailStr, token: str) -> None:
+    reset_link = f"http://localhost:8000/api/v1/auth/reset-password?token={token}"
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+        <head><meta charset="UTF-8"><title>Password Reset</title></head>
+        <body style="font-family: Arial, sans-serif; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+                <h2 style="color: #e53e3e;">Password Reset Request</h2>
+                <p>You requested a password reset. Click the link below to set a new password:</p>
+                <p><a href="{reset_link}" style="background-color: #e53e3e; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
+                <p><small>If you didn't request this, please ignore this email.</small></p>
+            </div>
+        </body>
+    </html>
+    """
+    message = MessageSchema(
+        subject="Password Reset - Online Cinema",
+        recipients=[email],
+        body=html_content,
+        subtype=MessageType.html,
+    )
+    fm = FastMail(conf)
+    await fm.send_message(message)

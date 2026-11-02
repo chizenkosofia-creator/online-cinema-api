@@ -78,6 +78,19 @@ services:
       - db
       - redis
 
+  celery_beat:
+    build: .
+    env_file:
+      - .env
+    command: celery -A src.celery_app:celery_app beat --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+    depends_on:
+      - redis
+      - db
 volumes:
   postgres_data:
   minio_data:
